@@ -1,0 +1,38 @@
+on:
+  pull_request:
+  #   branches:
+  #   - master
+
+  push:
+      branches:
+        - main
+
+jobs:
+
+  build:
+    runs-on: ubuntu-18.04
+    env:
+      GOPRIVATE: github.com/ont-id
+      GH_ACCESS_TOKEN: ${{ secrets.DIUCICD_TOKEN }}
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.17
+
+    - name: Inject insteadOf configuration for private repo
+      run: |
+        git config --global url."https://${{ secrets.DIUCICD_TOKEN }}:x-oauth-basic@github.com/ont-id".insteadOf "https://github.com/ont-id"
+        # test
+        GOPRIVATE=github.com/ont-id/verifiable-credential-go-sdk go get -v github.com/ont-id/verifiable-credential-go-sdk
+        # test
+        date
+
+
+    - name: format
+      run: bash ./.gha.gofmt.sh
+
+    - name: test
+      run: bash ./.gha.gotest.sh
